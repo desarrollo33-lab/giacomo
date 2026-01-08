@@ -367,15 +367,3 @@ Después de ejecutar el SQL, verifica en **Table Editor**:
 
 ---
 
-## 🎯 PRÓXIMO PASO
-
-Ejecutar `SUPABASE_TEST_DATA.md` para insertar datos de prueba:
-- 3 vehículos (Porsche, Ferrari, Lamborghini)
-- 1 sorteo activo
-- 1 influencer
-
----
-
-**Versión:** 1.0
-**Fecha:** 8 de Enero 2026
-**Para:** DCR Motors - Giacomo Project
