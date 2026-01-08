@@ -1,5 +1,6 @@
 import { QueryClient, QueryClientProvider } from '@tanstack/react-query';
 import { ReactQueryDevtools } from '@tanstack/react-query-devtools';
+import { BrowserRouter } from 'react-router-dom';
 import { useState, type ReactNode } from 'react';
 
 export function Providers({ children }: { children: ReactNode }) {
@@ -16,11 +17,13 @@ export function Providers({ children }: { children: ReactNode }) {
 
   return (
     <QueryClientProvider client={queryClient}>
-      {children}
+      <BrowserRouter>
+        {children}
+      </BrowserRouter>
       {import.meta.env.DEV && (
         <ReactQueryDevtools
           initialIsOpen={false}
-          position={"bottom-right" as const}
+          position="bottom"
         />
       )}
     </QueryClientProvider>
