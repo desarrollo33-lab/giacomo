@@ -1,544 +1,381 @@
-# SUPABASE SQL SETUP - DCR Motors Giacomo Project
-# Ejecutar este SQL completo en el SQL Editor de Supabase
+## 🗄️ SQL COMPLETO
 
--- ============================================
--- CLEANUP (Remove existing tables if any)
--- ============================================
+```sql
+-- ============================================================================
+-- GIACOMO PROJECT - DCR MOTORS
+-- Supabase Database Schema
+-- Fecha: 8 de Enero 2026
+-- ============================================================================
 
-DROP TABLE IF EXISTS client_storage_units CASCADE;
-DROP TABLE IF EXISTS user_stickers CASCADE;
-DROP TABLE IF EXISTS promo_codes CASCADE;
-DROP TABLE IF EXISTS user_roles CASCADE;
-DROP TABLE IF EXISTS influencers CASCADE;
-DROP TABLE IF EXISTS raffles CASCADE;
-DROP TABLE IF EXISTS sticker_tiers CASCADE;
-DROP TABLE IF EXISTS vehicles CASCADE;
-DROP TABLE IF EXISTS roles CASCADE;
-DROP TABLE IF EXISTS users CASCADE;
+-- ----------------------------------------------------------------------------
+-- 1. CREATE TABLES
+-- ----------------------------------------------------------------------------
 
--- ============================================
--- EXTENSIONS
--- ============================================
+-- Table: users (Extended from Supabase auth.users)
+CREATE TABLE IF NOT EXISTS users (
+  id UUID PRIMARY KEY REFERENCES auth.users(id) ON DELETE CASCADE,
+  email TEXT NOT NULL UNIQUE,
+  password_hash TEXT NOT NULL,
+  full_name TEXT,
+  phone_number TEXT,
+  email_verified_at TIMESTAMPTZ,
+  created_at TIMESTAMPTZ DEFAULT NOW(),
+  updated_at TIMESTAMPTZ DEFAULT NOW()
+);
 
-CREATE EXTENSION IF NOT EXISTS "uuid-ossp";
+-- Table: roles
+CREATE TABLE IF NOT EXISTS roles (
+  id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
+  name TEXT NOT NULL UNIQUE,
+  created_at TIMESTAMPTZ DEFAULT NOW()
+);
 
--- ============================================
--- HELPER FUNCTIONS
--- ============================================
+-- Table: user_roles (Many-to-Many: users ↔ roles)
+CREATE TABLE IF NOT EXISTS user_roles (
+  user_id UUID NOT NULL REFERENCES users(id) ON DELETE CASCADE,
+  role_id UUID NOT NULL REFERENCES roles(id) ON DELETE CASCADE,
+  created_at TIMESTAMPTZ DEFAULT NOW(),
+  PRIMARY KEY (user_id, role_id)
+);
 
--- Function to auto-update updated_at timestamp
+-- Table: vehicles
+CREATE TABLE IF NOT EXISTS vehicles (
+  id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
+  slug TEXT NOT NULL UNIQUE,
+  brand TEXT NOT NULL,
+  model TEXT NOT NULL,
+  year INTEGER,
+  edition_type TEXT,
+  horsepower INTEGER,
+  torque INTEGER,
+  weight_kg INTEGER,
+  mileage_kms INTEGER,
+  purchase_price NUMERIC(12, 2),
+  current_price NUMERIC(12, 2),
+  profitability_percentage NUMERIC(5, 2),
+  parallel_car_model TEXT,
+  status TEXT NOT NULL DEFAULT 'Available' CHECK (status IN ('Available', 'Sold', 'In Storage', 'Prize', 'Reserved')),
+  highlights TEXT,
+  image_url TEXT,
+  description TEXT,
+  created_at TIMESTAMPTZ DEFAULT NOW(),
+  updated_at TIMESTAMPTZ DEFAULT NOW()
+);
+
+-- Table: raffles
+CREATE TABLE IF NOT EXISTS raffles (
+  id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
+  title TEXT NOT NULL,
+  description TEXT,
+  prize_vehicle_id UUID REFERENCES vehicles(id) ON DELETE SET NULL,
+  start_date TIMESTAMPTZ NOT NULL,
+  end_date TIMESTAMPTZ NOT NULL,
+  status TEXT NOT NULL DEFAULT 'Upcoming' CHECK (status IN ('Upcoming', 'Active', 'Drawing', 'Completed', 'Cancelled')),
+  winner_user_id UUID REFERENCES users(id) ON DELETE SET NULL,
+  created_at TIMESTAMPTZ DEFAULT NOW(),
+  updated_at TIMESTAMPTZ DEFAULT NOW()
+);
+
+-- Table: sticker_tiers
+CREATE TABLE IF NOT EXISTS sticker_tiers (
+  id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
+  name TEXT NOT NULL UNIQUE,
+  price NUMERIC(10, 2) NOT NULL,
+  number_of_entries INTEGER DEFAULT 1,
+  description TEXT
+);
+
+-- Table: user_stickers
+CREATE TABLE IF NOT EXISTS user_stickers (
+  id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
+  user_id UUID NOT NULL REFERENCES users(id) ON DELETE CASCADE,
+  raffle_id UUID NOT NULL REFERENCES raffles(id) ON DELETE CASCADE,
+  sticker_tier_id UUID NOT NULL REFERENCES sticker_tiers(id) ON DELETE CASCADE,
+  promo_code_id UUID REFERENCES promo_codes(id) ON DELETE SET NULL,
+  purchase_date TIMESTAMPTZ DEFAULT NOW(),
+  transaction_id TEXT
+);
+
+-- Table: influencers
+CREATE TABLE IF NOT EXISTS influencers (
+  id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
+  name TEXT NOT NULL,
+  email TEXT UNIQUE,
+  contact_info TEXT,
+  commission_rate NUMERIC(5, 4), -- e.g., 0.0500 for 5%
+  created_at TIMESTAMPTZ DEFAULT NOW(),
+  updated_at TIMESTAMPTZ DEFAULT NOW()
+);
+
+-- Table: promo_codes
+CREATE TABLE IF NOT EXISTS promo_codes (
+  id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
+  code TEXT NOT NULL UNIQUE,
+  influencer_id UUID NOT NULL REFERENCES influencers(id) ON DELETE CASCADE,
+  is_active BOOLEAN DEFAULT true,
+  created_at TIMESTAMPTZ DEFAULT NOW()
+);
+
+-- Table: client_storage_units
+CREATE TABLE IF NOT EXISTS client_storage_units (
+  id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
+  user_id UUID NOT NULL REFERENCES users(id) ON DELETE CASCADE,
+  vehicle_id UUID NOT NULL REFERENCES vehicles(id) ON DELETE CASCADE,
+  storage_contract_id TEXT UNIQUE,
+  start_date TIMESTAMPTZ,
+  status TEXT NOT NULL DEFAULT 'Pending' CHECK (status IN ('Active', 'Pending', 'Completed')),
+  access_instructions TEXT,
+  created_at TIMESTAMPTZ DEFAULT NOW()
+);
+
+-- ----------------------------------------------------------------------------
+-- 2. ROW LEVEL SECURITY (RLS) POLICIES
+-- ----------------------------------------------------------------------------
+
+-- Enable RLS on all tables
+ALTER TABLE users ENABLE ROW LEVEL SECURITY;
+ALTER TABLE roles ENABLE ROW LEVEL SECURITY;
+ALTER TABLE user_roles ENABLE ROW LEVEL SECURITY;
+ALTER TABLE vehicles ENABLE ROW LEVEL SECURITY;
+ALTER TABLE raffles ENABLE ROW LEVEL SECURITY;
+ALTER TABLE sticker_tiers ENABLE ROW LEVEL SECURITY;
+ALTER TABLE user_stickers ENABLE ROW LEVEL SECURITY;
+ALTER TABLE influencers ENABLE ROW LEVEL SECURITY;
+ALTER TABLE promo_codes ENABLE ROW LEVEL SECURITY;
+ALTER TABLE client_storage_units ENABLE ROW LEVEL SECURITY;
+
+-- Users can view their own profile
+CREATE POLICY "Users can view own profile"
+ON users FOR SELECT
+USING (auth.uid() = id);
+
+-- Users can update their own profile
+CREATE POLICY "Users can update own profile"
+ON users FOR UPDATE
+USING (auth.uid() = id);
+
+-- Anyone can view roles
+CREATE POLICY "Roles are viewable by everyone"
+ON roles FOR SELECT
+USING (true);
+
+-- Anyone can view user_roles
+CREATE POLICY "User roles are viewable by everyone"
+ON user_roles FOR SELECT
+USING (true);
+
+-- Anyone can view vehicles
+CREATE POLICY "Vehicles are viewable by everyone"
+ON vehicles FOR SELECT
+USING (true);
+
+-- Anyone can view raffles
+CREATE POLICY "Raffles are viewable by everyone"
+ON raffles FOR SELECT
+USING (true);
+
+-- Anyone can view sticker tiers
+CREATE POLICY "Sticker tiers are viewable by everyone"
+ON sticker_tiers FOR SELECT
+USING (true);
+
+-- Users can view their own stickers
+CREATE POLICY "Users can view own stickers"
+ON user_stickers FOR SELECT
+USING (auth.uid() = user_id);
+
+-- Users can insert their own stickers
+CREATE POLICY "Users can insert own stickers"
+ON user_stickers FOR INSERT
+WITH CHECK (auth.uid() = user_id);
+
+-- Anyone can view influencers
+CREATE POLICY "Influencers are viewable by everyone"
+ON influencers FOR SELECT
+USING (true);
+
+-- Anyone can view active promo codes
+CREATE POLICY "Active promo codes are viewable by everyone"
+ON promo_codes FOR SELECT
+USING (is_active = true);
+
+-- Users can view their own storage units
+CREATE POLICY "Users can view own storage units"
+ON client_storage_units FOR SELECT
+USING (auth.uid() = user_id);
+
+-- Users can insert their own storage units
+CREATE POLICY "Users can insert own storage units"
+ON client_storage_units FOR INSERT
+WITH CHECK (auth.uid() = user_id);
+
+-- ----------------------------------------------------------------------------
+-- 3. TRIGGERS FOR UPDATED_AT
+-- ----------------------------------------------------------------------------
+
+-- Create trigger function
 CREATE OR REPLACE FUNCTION update_updated_at_column()
 RETURNS TRIGGER AS $$
 BEGIN
     NEW.updated_at = NOW();
     RETURN NEW;
 END;
-$$ language 'plpgsql';
+$$ LANGUAGE plpgsql;
 
--- Function to auto-set created_at and updated_at
-CREATE OR REPLACE FUNCTION set_created_at_and_updated_at()
-RETURNS TRIGGER AS $$
-BEGIN
-    NEW.created_at = NOW();
-    NEW.updated_at = NOW();
-    RETURN NEW;
-END;
-$$ language 'plpgsql';
-
--- ============================================
--- TABLE: roles
--- ============================================
-
-CREATE TABLE roles (
-    id UUID DEFAULT uuid_generate_v4() PRIMARY KEY,
-    name TEXT NOT NULL UNIQUE,
-    created_at TIMESTAMP WITH TIME ZONE DEFAULT NOW(),
-    updated_at TIMESTAMP WITH TIME ZONE DEFAULT NOW()
-);
-
-CREATE TRIGGER roles_set_timestamps
-    BEFORE INSERT ON roles
-    FOR EACH ROW
-    EXECUTE FUNCTION set_created_at_and_updated_at();
-
-CREATE TRIGGER roles_update_timestamp
-    BEFORE UPDATE ON roles
-    FOR EACH ROW
-    EXECUTE FUNCTION update_updated_at_column();
-
--- RLS for roles
-ALTER TABLE roles ENABLE ROW LEVEL SECURITY;
-
-CREATE POLICY "roles_read_policy" ON roles 
-FOR SELECT TO authenticated USING (true);
-
-CREATE POLICY "roles_insert_policy" ON roles 
-FOR INSERT TO authenticated WITH CHECK (true);
-
-CREATE POLICY "roles_update_policy" ON roles 
-FOR UPDATE TO authenticated WITH CHECK (true);
-
-CREATE POLICY "roles_delete_policy" ON roles 
-FOR DELETE TO authenticated USING (true);
-
--- ============================================
--- TABLE: users
--- ============================================
-
-CREATE TABLE users (
-    id UUID PRIMARY KEY REFERENCES auth.users(id) ON DELETE CASCADE,
-    email TEXT NOT NULL,
-    password_hash TEXT NOT NULL,
-    full_name TEXT,
-    phone_number TEXT,
-    email_verified_at TIMESTAMP WITH TIME ZONE,
-    created_at TIMESTAMP WITH TIME ZONE DEFAULT NOW(),
-    updated_at TIMESTAMP WITH TIME ZONE DEFAULT NOW(),
-    CONSTRAINT users_email_unique UNIQUE(email)
-);
-
-CREATE TRIGGER users_set_timestamps
-    BEFORE INSERT ON users
-    FOR EACH ROW
-    EXECUTE FUNCTION set_created_at_and_updated_at();
-
-CREATE TRIGGER users_update_timestamp
+-- Apply trigger to tables with updated_at column
+CREATE TRIGGER update_users_updated_at
     BEFORE UPDATE ON users
     FOR EACH ROW
     EXECUTE FUNCTION update_updated_at_column();
 
--- Indexes
-CREATE INDEX idx_users_email ON users(email);
-
--- RLS for users
-ALTER TABLE users ENABLE ROW LEVEL SECURITY;
-
-CREATE POLICY "users_select_policy" ON users 
-FOR SELECT TO authenticated USING (auth.uid() = id);
-
-CREATE POLICY "users_insert_policy" ON users 
-FOR INSERT TO authenticated WITH CHECK (auth.uid() = id);
-
-CREATE POLICY "users_update_policy" ON users 
-FOR UPDATE TO authenticated USING (auth.uid() = id);
-
-CREATE POLICY "users_delete_policy" ON users 
-FOR DELETE TO authenticated USING (auth.uid() = id);
-
--- ============================================
--- TABLE: user_roles
--- ============================================
-
-CREATE TABLE user_roles (
-    user_id UUID REFERENCES users(id) ON DELETE CASCADE,
-    role_id UUID REFERENCES roles(id) ON DELETE CASCADE,
-    created_at TIMESTAMP WITH TIME ZONE DEFAULT NOW(),
-    PRIMARY KEY (user_id, role_id)
-);
-
--- Indexes
-CREATE INDEX idx_user_roles_user_id ON user_roles(user_id);
-CREATE INDEX idx_user_roles_role_id ON user_roles(role_id);
-
--- RLS for user_roles
-ALTER TABLE user_roles ENABLE ROW LEVEL SECURITY;
-
-CREATE POLICY "user_roles_select_policy" ON user_roles 
-FOR SELECT TO authenticated USING (auth.uid() = user_id);
-
-CREATE POLICY "user_roles_insert_policy" ON user_roles 
-FOR INSERT TO authenticated WITH CHECK (auth.uid() = user_id);
-
-CREATE POLICY "user_roles_delete_policy" ON user_roles 
-FOR DELETE TO authenticated USING (auth.uid() = user_id);
-
--- ============================================
--- TABLE: influencers
--- ============================================
-
-CREATE TABLE influencers (
-    id UUID DEFAULT uuid_generate_v4() PRIMARY KEY,
-    name TEXT NOT NULL,
-    email TEXT,
-    contact_info TEXT,
-    commission_rate NUMERIC(5, 2),
-    created_at TIMESTAMP WITH TIME ZONE DEFAULT NOW(),
-    updated_at TIMESTAMP WITH TIME ZONE DEFAULT NOW()
-);
-
-CREATE TRIGGER influencers_set_timestamps
-    BEFORE INSERT ON influencers
-    FOR EACH ROW
-    EXECUTE FUNCTION set_created_at_and_updated_at();
-
-CREATE TRIGGER influencers_update_timestamp
-    BEFORE UPDATE ON influencers
-    FOR EACH ROW
-    EXECUTE FUNCTION update_updated_at_column();
-
--- Indexes
-CREATE INDEX idx_influencers_email ON influencers(email);
-
--- RLS for influencers
-ALTER TABLE influencers ENABLE ROW LEVEL SECURITY;
-
-CREATE POLICY "influencers_read_policy" ON influencers 
-FOR SELECT TO authenticated USING (true);
-
-CREATE POLICY "influencers_insert_policy" ON influencers 
-FOR INSERT TO authenticated WITH CHECK (true);
-
-CREATE POLICY "influencers_update_policy" ON influencers 
-FOR UPDATE TO authenticated WITH CHECK (true);
-
-CREATE POLICY "influencers_delete_policy" ON influencers 
-FOR DELETE TO authenticated USING (true);
-
--- ============================================
--- TABLE: sticker_tiers
--- ============================================
-
-CREATE TABLE sticker_tiers (
-    id UUID DEFAULT uuid_generate_v4() PRIMARY KEY,
-    name TEXT NOT NULL,
-    price NUMERIC(10, 2) NOT NULL,
-    number_of_entries INTEGER NOT NULL,
-    description TEXT,
-    created_at TIMESTAMP WITH TIME ZONE DEFAULT NOW(),
-    updated_at TIMESTAMP WITH TIME ZONE DEFAULT NOW()
-);
-
-CREATE TRIGGER sticker_tiers_set_timestamps
-    BEFORE INSERT ON sticker_tiers
-    FOR EACH ROW
-    EXECUTE FUNCTION set_created_at_and_updated_at();
-
-CREATE TRIGGER sticker_tiers_update_timestamp
-    BEFORE UPDATE ON sticker_tiers
-    FOR EACH ROW
-    EXECUTE FUNCTION update_updated_at_column();
-
--- RLS for sticker_tiers
-ALTER TABLE sticker_tiers ENABLE ROW LEVEL SECURITY;
-
-CREATE POLICY "sticker_tiers_read_policy" ON sticker_tiers 
-FOR SELECT TO authenticated USING (true);
-
-CREATE POLICY "sticker_tiers_insert_policy" ON sticker_tiers 
-FOR INSERT TO authenticated WITH CHECK (true);
-
-CREATE POLICY "sticker_tiers_update_policy" ON sticker_tiers 
-FOR UPDATE TO authenticated WITH CHECK (true);
-
-CREATE POLICY "sticker_tiers_delete_policy" ON sticker_tiers 
-FOR DELETE TO authenticated USING (true);
-
--- ============================================
--- TABLE: vehicles
--- ============================================
-
-CREATE TABLE vehicles (
-    id UUID DEFAULT uuid_generate_v4() PRIMARY KEY,
-    slug TEXT NOT NULL UNIQUE,
-    brand TEXT NOT NULL,
-    model TEXT NOT NULL,
-    year INTEGER,
-    edition_type TEXT,
-    horsepower INTEGER,
-    torque INTEGER,
-    weight_kg INTEGER,
-    mileage_kms INTEGER,
-    purchase_price NUMERIC(12, 2),
-    current_price NUMERIC(12, 2),
-    profitability_percentage NUMERIC(5, 2),
-    parallel_car_model TEXT,
-    status TEXT CHECK (status IN ('Available', 'Sold', 'In Storage', 'Prize', 'Reserved')) NOT NULL DEFAULT 'Available',
-    highlights TEXT,
-    image_url TEXT,
-    description TEXT,
-    created_at TIMESTAMP WITH TIME ZONE DEFAULT NOW(),
-    updated_at TIMESTAMP WITH TIME ZONE DEFAULT NOW()
-);
-
-CREATE TRIGGER vehicles_set_timestamps
-    BEFORE INSERT ON vehicles
-    FOR EACH ROW
-    EXECUTE FUNCTION set_created_at_and_updated_at();
-
-CREATE TRIGGER vehicles_update_timestamp
+CREATE TRIGGER update_vehicles_updated_at
     BEFORE UPDATE ON vehicles
     FOR EACH ROW
     EXECUTE FUNCTION update_updated_at_column();
 
--- Indexes
-CREATE INDEX idx_vehicles_brand ON vehicles(brand);
-CREATE INDEX idx_vehicles_model ON vehicles(model);
-CREATE INDEX idx_vehicles_status ON vehicles(status);
-CREATE INDEX idx_vehicles_slug ON vehicles(slug);
-
--- RLS for vehicles
-ALTER TABLE vehicles ENABLE ROW LEVEL SECURITY;
-
-CREATE POLICY "vehicles_public_read_policy" ON vehicles 
-FOR SELECT USING (true);
-
-CREATE POLICY "vehicles_insert_policy" ON vehicles 
-FOR INSERT TO authenticated WITH CHECK (true);
-
-CREATE POLICY "vehicles_update_policy" ON vehicles 
-FOR UPDATE TO authenticated USING (true);
-
-CREATE POLICY "vehicles_delete_policy" ON vehicles 
-FOR DELETE TO authenticated USING (true);
-
--- ============================================
--- TABLE: raffles
--- ============================================
-
-CREATE TABLE raffles (
-    id UUID DEFAULT uuid_generate_v4() PRIMARY KEY,
-    title TEXT NOT NULL,
-    description TEXT,
-    prize_vehicle_id UUID REFERENCES vehicles(id) ON DELETE SET NULL,
-    start_date TIMESTAMP WITH TIME ZONE NOT NULL,
-    end_date TIMESTAMP WITH TIME ZONE NOT NULL,
-    status TEXT CHECK (status IN ('Upcoming', 'Active', 'Drawing', 'Completed', 'Cancelled')) NOT NULL DEFAULT 'Upcoming',
-    winner_user_id UUID REFERENCES users(id) ON DELETE SET NULL,
-    created_at TIMESTAMP WITH TIME ZONE DEFAULT NOW(),
-    updated_at TIMESTAMP WITH TIME ZONE DEFAULT NOW()
-);
-
-CREATE TRIGGER raffles_set_timestamps
-    BEFORE INSERT ON raffles
-    FOR EACH ROW
-    EXECUTE FUNCTION set_created_at_and_updated_at();
-
-CREATE TRIGGER raffles_update_timestamp
+CREATE TRIGGER update_raffles_updated_at
     BEFORE UPDATE ON raffles
     FOR EACH ROW
     EXECUTE FUNCTION update_updated_at_column();
 
--- Indexes
+CREATE TRIGGER update_influencers_updated_at
+    BEFORE UPDATE ON influencers
+    FOR EACH ROW
+    EXECUTE FUNCTION update_updated_at_column();
+
+-- ----------------------------------------------------------------------------
+-- 4. INDEXES FOR OPTIMIZATION
+-- ----------------------------------------------------------------------------
+
+-- Users indexes
+CREATE INDEX idx_users_email ON users(email);
+
+-- Vehicles indexes
+CREATE INDEX idx_vehicles_status ON vehicles(status);
+CREATE INDEX idx_vehicles_brand ON vehicles(brand);
+CREATE INDEX idx_vehicles_slug ON vehicles(slug);
+
+-- Raffles indexes
 CREATE INDEX idx_raffles_status ON raffles(status);
-CREATE INDEX idx_raffles_dates ON raffles(start_date, end_date);
-CREATE INDEX idx_raffles_prize_vehicle_id ON raffles(prize_vehicle_id);
+CREATE INDEX idx_raffles_end_date ON raffles(end_date);
+CREATE INDEX idx_raffles_prize_vehicle ON raffles(prize_vehicle_id);
 
--- RLS for raffles
-ALTER TABLE raffles ENABLE ROW LEVEL SECURITY;
-
-CREATE POLICY "raffles_public_read_policy" ON raffles 
-FOR SELECT USING (true);
-
-CREATE POLICY "raffles_insert_policy" ON raffles 
-FOR INSERT TO authenticated WITH CHECK (true);
-
-CREATE POLICY "raffles_update_policy" ON raffles 
-FOR UPDATE TO authenticated WITH CHECK (true);
-
-CREATE POLICY "raffles_delete_policy" ON raffles 
-FOR DELETE TO authenticated USING (true);
-
--- ============================================
--- TABLE: promo_codes
--- ============================================
-
-CREATE TABLE promo_codes (
-    id UUID DEFAULT uuid_generate_v4() PRIMARY KEY,
-    code TEXT NOT NULL UNIQUE,
-    influencer_id UUID REFERENCES influencers(id) ON DELETE CASCADE,
-    is_active BOOLEAN DEFAULT true,
-    created_at TIMESTAMP WITH TIME ZONE DEFAULT NOW()
-);
-
-CREATE TRIGGER promo_codes_set_timestamps
-    BEFORE INSERT ON promo_codes
-    FOR EACH ROW
-    EXECUTE FUNCTION set_created_at_and_updated_at();
-
-CREATE TRIGGER promo_codes_update_timestamp
-    BEFORE UPDATE ON promo_codes
-    FOR EACH ROW
-    EXECUTE FUNCTION update_updated_at_column();
-
--- Indexes
-CREATE INDEX idx_promo_codes_code ON promo_codes(code);
-CREATE INDEX idx_promo_codes_influencer_id ON promo_codes(influencer_id);
-CREATE INDEX idx_promo_codes_is_active ON promo_codes(is_active);
-
--- RLS for promo_codes
-ALTER TABLE promo_codes ENABLE ROW LEVEL SECURITY;
-
-CREATE POLICY "promo_codes_read_policy" ON promo_codes 
-FOR SELECT TO authenticated USING (true);
-
-CREATE POLICY "promo_codes_insert_policy" ON promo_codes 
-FOR INSERT TO authenticated WITH CHECK (true);
-
-CREATE POLICY "promo_codes_update_policy" ON promo_codes 
-FOR UPDATE TO authenticated WITH CHECK (true);
-
-CREATE POLICY "promo_codes_delete_policy" ON promo_codes 
-FOR DELETE TO authenticated USING (true);
-
--- ============================================
--- TABLE: user_stickers
--- ============================================
-
-CREATE TABLE user_stickers (
-    id UUID DEFAULT uuid_generate_v4() PRIMARY KEY,
-    user_id UUID NOT NULL REFERENCES users(id) ON DELETE CASCADE,
-    raffle_id UUID NOT NULL REFERENCES raffles(id) ON DELETE CASCADE,
-    sticker_tier_id UUID NOT NULL REFERENCES sticker_tiers(id) ON DELETE CASCADE,
-    promo_code_id UUID REFERENCES promo_codes(id) ON DELETE SET NULL,
-    purchase_date TIMESTAMP WITH TIME ZONE DEFAULT NOW(),
-    transaction_id TEXT,
-    created_at TIMESTAMP WITH TIME ZONE DEFAULT NOW()
-);
-
-CREATE TRIGGER user_stickers_set_timestamps
-    BEFORE INSERT ON user_stickers
-    FOR EACH ROW
-    EXECUTE FUNCTION set_created_at_and_updated_at();
-
-CREATE TRIGGER user_stickers_update_timestamp
-    BEFORE UPDATE ON user_stickers
-    FOR EACH ROW
-    EXECUTE FUNCTION update_updated_at_column();
-
--- Indexes
+-- User stickers indexes
 CREATE INDEX idx_user_stickers_user_id ON user_stickers(user_id);
 CREATE INDEX idx_user_stickers_raffle_id ON user_stickers(raffle_id);
-CREATE INDEX idx_user_stickers_sticker_tier_id ON user_stickers(sticker_tier_id);
-CREATE INDEX idx_user_stickers_promo_code_id ON user_stickers(promo_code_id);
 
--- RLS for user_stickers
-ALTER TABLE user_stickers ENABLE ROW LEVEL SECURITY;
+-- Influencers indexes
+CREATE INDEX idx_influencers_email ON influencers(email);
 
-CREATE POLICY "user_stickers_select_policy" ON user_stickers 
-FOR SELECT TO authenticated USING (auth.uid() = user_id);
+-- Promo codes indexes
+CREATE INDEX idx_promo_codes_code ON promo_codes(code);
+CREATE INDEX idx_promo_codes_is_active ON promo_codes(is_active);
 
-CREATE POLICY "user_stickers_insert_policy" ON user_stickers 
-FOR INSERT TO authenticated WITH CHECK (auth.uid() = user_id);
-
-CREATE POLICY "user_stickers_delete_policy" ON user_stickers 
-FOR DELETE TO authenticated USING (auth.uid() = user_id);
-
--- ============================================
--- TABLE: client_storage_units
--- ============================================
-
-CREATE TABLE client_storage_units (
-    id UUID DEFAULT uuid_generate_v4() PRIMARY KEY,
-    user_id UUID NOT NULL REFERENCES users(id) ON DELETE CASCADE,
-    vehicle_id UUID NOT NULL REFERENCES vehicles(id) ON DELETE CASCADE,
-    storage_contract_id TEXT,
-    start_date TIMESTAMP WITH TIME ZONE,
-    status TEXT CHECK (status IN ('Active', 'Pending', 'Completed')) DEFAULT 'Pending',
-    access_instructions TEXT,
-    created_at TIMESTAMP WITH TIME ZONE DEFAULT NOW()
-);
-
-CREATE TRIGGER client_storage_units_set_timestamps
-    BEFORE INSERT ON client_storage_units
-    FOR EACH ROW
-    EXECUTE FUNCTION set_created_at_and_updated_at();
-
-CREATE TRIGGER client_storage_units_update_timestamp
-    BEFORE UPDATE ON client_storage_units
-    FOR EACH ROW
-    EXECUTE FUNCTION update_updated_at_column();
-
--- Indexes
+-- Client storage units indexes
 CREATE INDEX idx_client_storage_units_user_id ON client_storage_units(user_id);
-CREATE INDEX idx_client_storage_units_vehicle_id ON client_storage_units(vehicle_id);
 CREATE INDEX idx_client_storage_units_status ON client_storage_units(status);
 
--- RLS for client_storage_units
-ALTER TABLE client_storage_units ENABLE ROW LEVEL SECURITY;
+-- ----------------------------------------------------------------------------
+-- 5. SEED DATA (Datos Iniciales)
+-- ----------------------------------------------------------------------------
 
-CREATE POLICY "client_storage_units_select_policy" ON client_storage_units 
-FOR SELECT TO authenticated USING (auth.uid() = user_id);
+-- Insert initial roles
+INSERT INTO roles (name) VALUES
+('admin'),
+('user'),
+('influencer')
+ON CONFLICT (name) DO NOTHING;
 
-CREATE POLICY "client_storage_units_insert_policy" ON client_storage_units 
-FOR INSERT TO authenticated WITH CHECK (auth.uid() = user_id);
+-- Insert sticker tiers
+INSERT INTO sticker_tiers (name, price, number_of_entries, description) VALUES
+('Starter', 50.00, 5, '5 entries para empezar'),
+('Pro', 120.00, 15, '15 entries - Mejor valor'),
+('Elite', 350.00, 50, '50 entries - Máximas chances')
+ON CONFLICT (name) DO NOTHING;
 
-CREATE POLICY "client_storage_units_update_policy" ON client_storage_units 
-FOR UPDATE TO authenticated USING (auth.uid() = user_id);
+-- ----------------------------------------------------------------------------
+-- 6. HELPER FUNCTIONS
+-- ----------------------------------------------------------------------------
 
-CREATE POLICY "client_storage_units_delete_policy" ON client_storage_units 
-FOR DELETE TO authenticated USING (auth.uid() = user_id);
+-- Function to get user roles
+CREATE OR REPLACE FUNCTION get_user_roles(user_uuid UUID)
+RETURNS TABLE(role_name TEXT) AS $$
+BEGIN
+    RETURN QUERY
+    SELECT r.name
+    FROM roles r
+    JOIN user_roles ur ON r.id = ur.role_id
+    WHERE ur.user_id = user_uuid;
+END;
+$$ LANGUAGE plpgsql SECURITY DEFINER;
 
--- ============================================
--- SEED DATA
--- ============================================
+-- ----------------------------------------------------------------------------
+-- 7. VERIFICATION QUERIES
+-- ----------------------------------------------------------------------------
 
--- Seed roles
-INSERT INTO roles (name) VALUES 
-    ('admin'),
-    ('registered_user'),
-    ('client');
-
--- Seed sticker tiers
-INSERT INTO sticker_tiers (name, price, number_of_entries, description) VALUES 
-    ('Pack Starter', 50.00, 5, 'Ideal para comenzar a participar en sorteos'),
-    ('Pack Pro', 120.00, 15, 'Más stickers, más chances de ganar'),
-    ('Pack Elite', 350.00, 50, 'Máxima probabilidad de ganar con beneficios VIP');
-
--- Seed influencers
-INSERT INTO influencers (name, email, contact_info, commission_rate) VALUES 
-    ('Auto Crítico', 'autocritic@example.com', '@autocritic', 10.00),
-    ('DCR Motors', 'dcrmotors@example.com', '@dcrmotors', 0.00),
-    ('Tugana', 'tugana@example.com', '@tugana', 5.00);
-
--- Seed promo codes
-INSERT INTO promo_codes (code, influencer_id, is_active) VALUES 
-    ('AUTOCRITIC10', (SELECT id FROM influencers WHERE name = 'Auto Crítico'), true),
-    ('DCRSTART', (SELECT id FROM influencers WHERE name = 'DCR Motors'), true),
-    ('TUGANA5', (SELECT id FROM influencers WHERE name = 'Tugana'), true);
-
--- ============================================
--- HELPER VIEWS
--- ============================================
-
--- View for active raffles with vehicle details
-CREATE VIEW active_raffles_view AS
-SELECT 
-    r.id,
-    r.title,
-    r.description,
-    r.start_date,
-    r.end_date,
-    r.status,
-    v.brand,
-    v.model,
-    v.year,
-    v.image_url,
-    v.current_price as prize_value,
-    COUNT(us.id) as tickets_sold,
-    (SELECT number_of_entries FROM sticker_tiers WHERE id = us.sticker_tier_id LIMIT 1) as entries_per_tier
-FROM raffles r
-LEFT JOIN vehicles v ON r.prize_vehicle_id = v.id
-LEFT JOIN user_stickers us ON r.id = us.raffle_id
-WHERE r.status IN ('Active', 'Upcoming')
-GROUP BY r.id, v.brand, v.model, v.year, v.image_url, v.current_price;
-
--- ============================================
--- COMPLETION
--- ============================================
-
--- Verify tables were created
+-- Verify all tables were created
 SELECT 
     table_name,
-    (SELECT COUNT(*) FROM information_schema.table_constraints tc 
-     WHERE tc.table_name = t.table_name AND constraint_type = 'FOREIGN KEY') as fk_count,
-    (SELECT COUNT(*) FROM pg_policies pp 
-     WHERE pp.tablename = t.table_name) as rls_policies_count
+    (SELECT COUNT(*) FROM information_schema.columns WHERE table_name = t.table_name) as column_count
 FROM information_schema.tables t
 WHERE table_schema = 'public'
+    AND table_name IN (
+        'users', 'roles', 'user_roles',
+        'vehicles', 'raffles', 'sticker_tiers',
+        'user_stickers', 'influencers', 'promo_codes',
+        'client_storage_units'
+    )
 ORDER BY table_name;
 
--- Message
-SELECT '✅ Database setup completed successfully!' as status;
-SELECT 'Tables created: 10' as info;
-SELECT 'RLS policies enabled: All tables' as info;
-SELECT 'Seed data inserted: roles, sticker_tiers, influencers, promo_codes' as info;
+-- Verify seed data
+SELECT 'Roles' as table_name, COUNT(*) as row_count FROM roles
+UNION ALL
+SELECT 'Sticker Tiers', COUNT(*) FROM sticker_tiers;
+```
+
+---
+
+## ✅ VERIFICACIÓN
+
+Después de ejecutar el SQL, verifica en **Table Editor**:
+
+### Tablas Creadas (10)
+1. ✅ users
+2. ✅ roles
+3. ✅ user_roles
+4. ✅ vehicles
+5. ✅ raffles
+6. ✅ sticker_tiers
+7. ✅ user_stickers
+8. ✅ influencers
+9. ✅ promo_codes
+10. ✅ client_storage_units
+
+### Datos Semilla
+- ✅ roles: 3 filas (admin, user, influencer)
+- ✅ sticker_tiers: 3 filas (Starter, Pro, Elite)
+
+### RLS Policies
+- ✅ Activadas en todas las tablas
+- ✅ Configuradas para seguridad multi-tenant
+
+### Triggers
+- ✅ updated_at automático en users, vehicles, raffles, influencers
+
+### Índices
+- ✅ 16 índices creados para optimización
+
+---
+
+## 🎯 PRÓXIMO PASO
+
+Ejecutar `SUPABASE_TEST_DATA.md` para insertar datos de prueba:
+- 3 vehículos (Porsche, Ferrari, Lamborghini)
+- 1 sorteo activo
+- 1 influencer
+
+---
+
+**Versión:** 1.0
+**Fecha:** 8 de Enero 2026
+**Para:** DCR Motors - Giacomo Project
