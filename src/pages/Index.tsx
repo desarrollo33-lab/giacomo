@@ -1,129 +1,198 @@
-import { useEffect, useState } from 'react';
-import supabase from '@/integrations/supabase/client';
+/**
+ * Index Page (Home)
+ * DCR Motors - Giacomo Project
+ * 
+ * Main landing page showcasing the DCR Motors brand
+ */
 
-interface Vehicle {
-  id: string;
-  brand: string;
-  model: string;
-  year: number;
-  edition_type: string;
-  horsepower: number;
-  purchase_price: number;
-  current_price: number;
-  profitability_percentage: number;
-  status: string;
-  image_url: string;
-  highlights: string;
-  description: string;
-}
+import { Button } from "@/components/ui/button";
+import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
+import { useVehicles, useActiveRaffles } from "@/hooks";
 
-const Index = () => {
-  const [vehicles, setVehicles] = useState<Vehicle[]>([]);
-  const [loading, setLoading] = useState(true);
-
-  useEffect(() => {
-    const fetchVehicles = async () => {
-      const { data, error } = await supabase
-        .from('vehicles')
-        .select('*')
-        .order('created_at', { ascending: false });
-
-      if (error) {
-        console.error('Error fetching vehicles:', error);
-      } else {
-        setVehicles(data || []);
-      }
-      setLoading(false);
-    };
-
-    fetchVehicles();
-  }, []);
+export default function Index() {
+  const { data: vehicles, isLoading: isLoadingVehicles } = useVehicles();
+  const { data: raffles, isLoading: isLoadingRaffles } = useActiveRaffles();
 
   return (
-    <div className="min-h-screen bg-gradient-to-br from-slate-900 to-slate-800">
-      <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-12">
-        <div className="text-center mb-12">
-          <h1 className="text-5xl font-bold text-white mb-4 tracking-tight">DCR Motors</h1>
-          <p className="text-xl text-slate-300">Activos de inversión exclusivos & Sorteos premium</p>
+    <div className="min-h-screen bg-background">
+      {/* Header/Navigation */}
+      <header className="border-b border-border">
+        <div className="container mx-auto px-4 py-4 flex items-center justify-between">
+          <div className="flex items-center gap-2">
+            <div className="w-8 h-8 bg-primary" />
+            <h1 className="text-xl font-bold tracking-tight">DCR MOTORS</h1>
+          </div>
+          <nav className="flex items-center gap-4">
+            <Button variant="ghost" asChild>
+              <a href="#collection">Collection</a>
+            </Button>
+            <Button variant="ghost" asChild>
+              <a href="#raffles">Raffles</a>
+            </Button>
+            <Button variant="ghost" asChild>
+              <a href="#storage">Storage</a>
+            </Button>
+            <Button>Sign In</Button>
+          </nav>
         </div>
+      </header>
 
-        {loading ? (
-          <div className="text-center text-white text-xl">Cargando inventario...</div>
-        ) : (
-          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-8">
-            {vehicles.map((vehicle) => (
-              <div key={vehicle.id} className="bg-slate-800 rounded-xl overflow-hidden shadow-2xl border border-slate-700 hover:border-amber-500 transition-all duration-300">
-                {vehicle.image_url ? (
-                  <img
-                    src={vehicle.image_url}
-                    alt={`${vehicle.brand} ${vehicle.model}`}
-                    className="w-full h-56 object-cover"
-                  />
-                ) : (
-                  <div className="w-full h-56 bg-gradient-to-br from-slate-700 to-slate-800 flex items-center justify-center">
-                    <span className="text-slate-500 text-sm">Sin imagen</span>
-                  </div>
-                )}
-                <div className="p-6">
-                  <div className="flex justify-between items-start mb-2">
-                    <div>
-                      <span className="text-amber-500 font-semibold text-sm uppercase tracking-wider">{vehicle.brand}</span>
-                      <h2 className="text-2xl font-bold text-white">{vehicle.model}</h2>
-                    </div>
-                    <span className={`px-3 py-1 rounded-full text-xs font-semibold ${
-                      vehicle.status === 'Available' ? 'bg-green-500/20 text-green-400' :
-                      vehicle.status === 'Sold' ? 'bg-red-500/20 text-red-400' :
-                      'bg-slate-600 text-slate-300'
-                    }`}>
-                      {vehicle.status}
-                    </span>
-                  </div>
-                  
-                  <div className="text-sm text-slate-400 mb-4">
-                    <p>{vehicle.year} • {vehicle.edition_type}</p>
-                    <p className="mt-1">{vehicle.horsepower} HP • {vehicle.torque} Nm</p>
-                  </div>
-
-                  <div className="bg-slate-900/50 rounded-lg p-4 mb-4">
-                    <div className="flex justify-between items-center mb-2">
-                      <span className="text-slate-400 text-sm">Precio Mercado</span>
-                      <span className="text-white font-bold text-lg">
-                        ${(vehicle.current_price / 1000000).toFixed(2)}M CLP
-                      </span>
-                    </div>
-                    <div className="flex justify-between items-center">
-                      <span className="text-slate-400 text-sm">Rentabilidad</span>
-                      <span className={`font-semibold ${
-                        vehicle.profitability_percentage >= 0 ? 'text-green-400' : 'text-red-400'
-                      }`}>
-                        {vehicle.profitability_percentage >= 0 ? '+' : ''}{vehicle.profitability_percentage.toFixed(1)}%
-                      </span>
-                    </div>
-                  </div>
-
-                  <p className="text-slate-300 text-sm mb-4 line-clamp-2">{vehicle.description}</p>
-                  
-                  {vehicle.highlights && (
-                    <p className="text-amber-500 text-xs italic mb-4">✨ {vehicle.highlights}</p>
-                  )}
-
-                  <button className="w-full bg-amber-500 hover:bg-amber-600 text-slate-900 font-bold py-3 px-6 rounded-lg transition-colors duration-200">
-                    Ver Detalles
-                  </button>
-                </div>
-              </div>
-            ))}
+      {/* Hero Section */}
+      <section className="py-20 bg-background border-b border-border">
+        <div className="container mx-auto px-4 text-center">
+          <h2 className="text-5xl font-bold tracking-tight mb-6" style={{ letterSpacing: '-0.02em' }}>
+            Luxury in Motion.
+            <br />
+            <span className="text-primary">Precision in Every Detail.</span>
+          </h2>
+          <p className="text-xl text-muted-foreground mb-8 max-w-2xl mx-auto">
+            Discover exclusive motorcycles and automobiles. Participate in our innovative sticker raffles.
+            Experience the future of luxury vehicle collecting.
+          </p>
+          <div className="flex gap-4 justify-center">
+            <Button size="lg" className="rounded-none">
+              Explore Collection
+            </Button>
+            <Button size="lg" variant="outline" className="rounded-none">
+              View Raffles
+            </Button>
           </div>
-        )}
+        </div>
+      </section>
 
-        {vehicles.length === 0 && !loading && (
-          <div className="text-center py-20">
-            <p className="text-slate-400 text-xl">No hay vehículos disponibles en este momento</p>
-          </div>
-        )}
-      </div>
+      {/* Featured Vehicles */}
+      <section id="collection" className="py-16">
+        <div className="container mx-auto px-4">
+          <h3 className="text-3xl font-bold tracking-tight mb-8">Featured Vehicles</h3>
+          
+          {isLoadingVehicles ? (
+            <div className="text-center py-12 text-muted-foreground">
+              Loading vehicles...
+            </div>
+          ) : (
+            <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
+              {vehicles?.slice(0, 6).map((vehicle) => (
+                <Card key={vehicle.id} className="overflow-hidden hover:shadow-lg transition-shadow">
+                  <div className="aspect-video bg-muted flex items-center justify-center">
+                    {vehicle.image_url ? (
+                      <img 
+                        src={vehicle.image_url} 
+                        alt={vehicle.model}
+                        className="w-full h-full object-cover"
+                      />
+                    ) : (
+                      <span className="text-muted-foreground">No Image</span>
+                    )}
+                  </div>
+                  <CardHeader>
+                    <CardTitle className="tracking-tight">
+                      {vehicle.brand} {vehicle.model}
+                    </CardTitle>
+                    <CardDescription>
+                      {vehicle.year} • {vehicle.edition_type || 'Standard Edition'}
+                    </CardDescription>
+                  </CardHeader>
+                  <CardContent>
+                    <div className="space-y-2 text-sm">
+                      <div className="flex justify-between">
+                        <span className="text-muted-foreground">HP:</span>
+                        <span className="font-medium">{vehicle.horsepower || 'N/A'}</span>
+                      </div>
+                      <div className="flex justify-between">
+                        <span className="text-muted-foreground">Price:</span>
+                        <span className="font-medium">
+                          {vehicle.current_price 
+                            ? new Intl.NumberFormat('es-CL', { 
+                                style: 'currency', 
+                                currency: 'CLP' 
+                              }).format(vehicle.current_price)
+                            : 'Contact us'}
+                        </span>
+                      </div>
+                      {vehicle.profitability_percentage !== null && (
+                        <div className="flex justify-between">
+                          <span className="text-muted-foreground">ROI:</span>
+                          <span className={`font-medium ${vehicle.profitability_percentage >= 0 ? 'text-green-600' : 'text-red-600'}`}>
+                            {vehicle.profitability_percentage.toFixed(2)}%
+                          </span>
+                        </div>
+                      )}
+                    </div>
+                    <Button className="w-full mt-4 rounded-none" variant="outline">
+                      View Details
+                    </Button>
+                  </CardContent>
+                </Card>
+              ))}
+            </div>
+          )}
+        </div>
+      </section>
+
+      {/* Active Raffles */}
+      <section id="raffles" className="py-16 bg-muted/30">
+        <div className="container mx-auto px-4">
+          <h3 className="text-3xl font-bold tracking-tight mb-8">Active Raffles</h3>
+          
+          {isLoadingRaffles ? (
+            <div className="text-center py-12 text-muted-foreground">
+              Loading raffles...
+            </div>
+          ) : raffles && raffles.length > 0 ? (
+            <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+              {raffles.map((raffle) => (
+                <Card key={raffle.id} className="overflow-hidden">
+                  <CardHeader>
+                    <CardTitle className="tracking-tight">{raffle.title}</CardTitle>
+                    <CardDescription>{raffle.description}</CardDescription>
+                  </CardHeader>
+                  <CardContent>
+                    <div className="space-y-4">
+                      <div className="flex items-center justify-between">
+                        <span className="text-sm text-muted-foreground">Status</span>
+                        <span className={`text-sm font-medium px-2 py-1 rounded-none ${
+                          raffle.status === 'Active' 
+                            ? 'bg-green-100 text-green-800' 
+                            : 'bg-yellow-100 text-yellow-800'
+                        }`}>
+                          {raffle.status}
+                        </span>
+                      </div>
+                      <div className="flex items-center justify-between">
+                        <span className="text-sm text-muted-foreground">End Date</span>
+                        <span className="text-sm font-medium">
+                          {new Date(raffle.end_date).toLocaleDateString()}
+                        </span>
+                      </div>
+                      {raffle.prize_vehicle && (
+                        <div className="pt-4 border-t border-border">
+                          <p className="text-sm text-muted-foreground mb-2">Prize:</p>
+                          <p className="font-medium">{raffle.prize_vehicle.brand} {raffle.prize_vehicle.model}</p>
+                        </div>
+                      )}
+                      <Button className="w-full rounded-none">
+                        Participate Now
+                      </Button>
+                    </div>
+                  </CardContent>
+                </Card>
+              ))}
+            </div>
+          ) : (
+            <div className="text-center py-12 text-muted-foreground">
+              No active raffles at the moment. Check back soon!
+            </div>
+          )}
+        </div>
+      </section>
+
+      {/* Footer */}
+      <footer className="py-8 border-t border-border bg-muted/30">
+        <div className="container mx-auto px-4 text-center text-sm text-muted-foreground">
+          <p>© 2026 DCR Motors. All rights reserved.</p>
+          <p className="mt-2">Luxury in Motion. Precision in Every Detail.</p>
+        </div>
+      </footer>
     </div>
   );
-};
-
-export default Index;
+}
