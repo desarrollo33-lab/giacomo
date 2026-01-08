@@ -1,12 +1,11 @@
-import { useState } from 'react'
+import Hero from '@/components/Hero'
+import DCRUniverse from '@/components/DCRUniverse'
 import { Button } from '@/components/ui/button'
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card'
 import { Input } from '@/components/ui/input'
 import { Textarea } from '@/components/ui/textarea'
 
 export function Index() {
-  const [activeTab, setActiveTab] = useState<'collection' | 'sales' | 'storage'>('collection')
-
   return (
     <div className="min-h-screen bg-slate-950">
       {/* 1. GLOBAL HEADER */}
@@ -42,180 +41,11 @@ export function Index() {
       {/* Spacing for fixed header */}
       <div className="h-20" />
 
-      {/* 2. HERO SECTION */}
-      <section className="relative min-h-screen flex items-center justify-center overflow-hidden bg-slate-950">
-        {/* YouTube Video Background */}
-        <div className="absolute inset-0 z-0">
-          <iframe
-            className="w-full h-full object-cover"
-            src="https://www.youtube.com/embed/VIDEO_ID?autoplay=1&mute=1&loop=1&playlist=VIDEO_ID&controls=0&showinfo=0&rel=0"
-            title="DCR Motors Background Video"
-            allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture"
-            allowFullScreen
-          />
-          <div className="absolute inset-0 bg-gradient-to-b from-slate-950/80 via-slate-950/60 to-slate-950" />
-        </div>
+      {/* 2. HERO SECTION - Improved with YouTube Video Background */}
+      <Hero />
 
-        {/* Hero Content */}
-        <div className="relative z-10 container mx-auto px-4 text-center">
-          <h1 className="text-6xl md:text-8xl font-bold tracking-tight text-white mb-6">
-            DCR <span className="text-primary">MOTORS</span>
-          </h1>
-          <p className="text-xl md:text-2xl text-slate-300 mb-8 max-w-2xl mx-auto">
-            exclusividad. pasión. adrenalina.
-          </p>
-          <div className="flex gap-4 justify-center">
-            <Button size="lg" className="bg-primary text-slate-950 hover:bg-primary/90 rounded-none font-semibold text-lg px-8">
-              Explorar Collection
-            </Button>
-            <Button size="lg" variant="outline" className="border-slate-700 text-white hover:bg-slate-800 rounded-none font-semibold text-lg px-8">
-              Ver Sorteos Activos
-            </Button>
-          </div>
-        </div>
-      </section>
-
-      {/* 3. DCR UNIVERSE SECTION */}
-      <section className="py-24 bg-slate-50">
-        <div className="container mx-auto px-4">
-          <div className="text-center mb-12">
-            <h2 className="text-4xl md:text-5xl font-bold text-slate-900 mb-4">
-              DCR <span className="text-primary">UNIVERSE</span>
-            </h2>
-            <p className="text-lg text-slate-600 max-w-2xl mx-auto">
-              Descubre las tres dimensiones de DCR Motors
-            </p>
-          </div>
-
-          {/* Tabs */}
-          <div className="flex justify-center gap-4 mb-12">
-            <Button
-              variant={activeTab === 'collection' ? 'default' : 'outline'}
-              onClick={() => setActiveTab('collection')}
-              className={activeTab === 'collection' 
-                ? 'bg-primary text-slate-950 rounded-none' 
-                : 'border-slate-300 text-slate-700 hover:bg-slate-100 rounded-none'}
-            >
-              Collection
-            </Button>
-            <Button
-              variant={activeTab === 'sales' ? 'default' : 'outline'}
-              onClick={() => setActiveTab('sales')}
-              className={activeTab === 'sales' 
-                ? 'bg-primary text-slate-950 rounded-none' 
-                : 'border-slate-300 text-slate-700 hover:bg-slate-100 rounded-none'}
-            >
-              Sales
-            </Button>
-            <Button
-              variant={activeTab === 'storage' ? 'default' : 'outline'}
-              onClick={() => setActiveTab('storage')}
-              className={activeTab === 'storage' 
-                ? 'bg-primary text-slate-950 rounded-none' 
-                : 'border-slate-300 text-slate-700 hover:bg-slate-100 rounded-none'}
-            >
-              Storage
-            </Button>
-          </div>
-
-          {/* Tab Content */}
-          <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
-            {activeTab === 'collection' && (
-              <>
-                <Card className="rounded-none border-slate-200 shadow-md">
-                  <CardHeader>
-                    <CardTitle>Supercars</CardTitle>
-                    <CardDescription>Colección exclusiva</CardDescription>
-                  </CardHeader>
-                  <CardContent>
-                    <p className="text-slate-600">Vehículos de alta gama disponibles</p>
-                  </CardContent>
-                </Card>
-                <Card className="rounded-none border-slate-200 shadow-md">
-                  <CardHeader>
-                    <CardTitle>Classic Cars</CardTitle>
-                    <CardDescription>Piezas históricas</CardDescription>
-                  </CardHeader>
-                  <CardContent>
-                    <p className="text-slate-600">Automóviles clásicos restaurados</p>
-                  </CardContent>
-                </Card>
-                <Card className="rounded-none border-slate-200 shadow-md">
-                  <CardHeader>
-                    <CardTitle>Limited Edition</CardTitle>
-                    <CardDescription>Ediciones limitadas</CardDescription>
-                  </CardHeader>
-                  <CardContent>
-                    <p className="text-slate-600">Modelos exclusivos y únicos</p>
-                  </CardContent>
-                </Card>
-              </>
-            )}
-            {activeTab === 'sales' && (
-              <>
-                <Card className="rounded-none border-slate-200 shadow-md">
-                  <CardHeader>
-                    <CardTitle>Auction</CardTitle>
-                    <CardDescription>Subastas en vivo</CardDescription>
-                  </CardHeader>
-                  <CardContent>
-                    <p className="text-slate-600">Participa en subastas exclusivas</p>
-                  </CardContent>
-                </Card>
-                <Card className="rounded-none border-slate-200 shadow-md">
-                  <CardHeader>
-                    <CardTitle>Direct Sales</CardTitle>
-                    <CardDescription>Venta directa</CardDescription>
-                  </CardHeader>
-                  <CardContent>
-                    <p className="text-slate-600">Compra directamente vehículos</p>
-                  </CardContent>
-                </Card>
-                <Card className="rounded-none border-slate-200 shadow-md">
-                  <CardHeader>
-                    <CardTitle>Brokerage</CardTitle>
-                    <CardDescription>Servicio de corretaje</CardDescription>
-                  </CardHeader>
-                  <CardContent>
-                    <p className="text-slate-600">Te ayudamos a encontrar tu auto</p>
-                  </CardContent>
-                </Card>
-              </>
-            )}
-            {activeTab === 'storage' && (
-              <>
-                <Card className="rounded-none border-slate-200 shadow-md">
-                  <CardHeader>
-                    <CardTitle>Premium Storage</CardTitle>
-                    <CardDescription>Almacenamiento premium</CardDescription>
-                  </CardHeader>
-                  <CardContent>
-                    <p className="text-slate-600">Instalaciones de última generación</p>
-                  </CardContent>
-                </Card>
-                <Card className="rounded-none border-slate-200 shadow-md">
-                  <CardHeader>
-                    <CardTitle>Maintenance</CardTitle>
-                    <CardDescription>Mantenimiento experto</CardDescription>
-                  </CardHeader>
-                  <CardContent>
-                    <p className="text-slate-600">Cuidado profesional de tu vehículo</p>
-                  </CardContent>
-                </Card>
-                <Card className="rounded-none border-slate-200 shadow-md">
-                  <CardHeader>
-                    <CardTitle>Logistics</CardTitle>
-                    <CardDescription>Logística completa</CardDescription>
-                  </CardHeader>
-                  <CardContent>
-                    <p className="text-slate-600">Transporte y gestión documental</p>
-                  </CardContent>
-                </Card>
-              </>
-            )}
-          </div>
-        </div>
-      </section>
+      {/* 3. DCR UNIVERSE SECTION - Premium Tabbed Component */}
+      <DCRUniverse />
 
       {/* 4. PROMOCION SECTION */}
       <section className="py-24 bg-slate-950">
