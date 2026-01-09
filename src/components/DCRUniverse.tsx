@@ -2,7 +2,7 @@ import React, { useState } from 'react';
 import { Button } from '@/components/ui/button';
 import { VehicleTable } from '@/components/VehicleTable';
 import { Badge } from '@/components/ui/badge';
-import { ArrowRight, Car, Gavel, Warehouse } from 'lucide-react';
+import { ArrowRight } from 'lucide-react';
 
 interface Vehicle {
   id: string;
@@ -150,22 +150,7 @@ const DCRUniverse: React.FC<DCRUniverseProps> = ({ vehicles }) => {
           {/* Right Column - Content (65% = 8 cols) */}
           <div className="lg:col-span-8">
             {activeTab === 'COLLECTION' ? (
-              <>
-                {/* KPI Cards */}
-                <div className="grid grid-cols-1 md:grid-cols-2 gap-4 mb-8">
-                  <div className="p-6 border-l-4 bg-secondary" style={{ borderColor: '#181f25', backgroundColor: '#f1f2f4' }}>
-                    <div className="text-3xl font-bold text-foreground mb-1">{vehicles.length}</div>
-                    <div className="text-sm text-muted-foreground">Vehículos Disponibles</div>
-                  </div>
-                  <div className="p-6 border-l-4 bg-secondary" style={{ borderColor: '#181f25', backgroundColor: '#f1f2f4' }}>
-                    <div className="text-3xl font-bold text-foreground mb-1">9</div>
-                    <div className="text-sm text-muted-foreground">Marcas Premium</div>
-                  </div>
-                </div>
-
-                {/* VehicleTable */}
-                <VehicleTable vehicles={vehicles} />
-              </>
+              <VehicleTable vehicles={vehicles} />
             ) : (
               <>
                 {/* Image + Badges + CTA */}
