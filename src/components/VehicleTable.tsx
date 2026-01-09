@@ -1,5 +1,5 @@
 import { useState } from 'react';
-import { Search, ArrowUpDown, X } from 'lucide-react';
+import { ArrowUpDown } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 
 interface Vehicle {
@@ -36,15 +36,9 @@ const statusColors: Record<string, string> = {
 };
 
 export function VehicleTable({ vehicles }: VehicleTableProps) {
-  const [searchTerm, setSearchTerm] = useState('');
   const [sortConfig, setSortConfig] = useState<{ key: string; direction: 'asc' | 'desc' } | null>(null);
 
-  const filteredVehicles = vehicles.filter(vehicle =>
-    vehicle.brand.toLowerCase().includes(searchTerm.toLowerCase()) ||
-    vehicle.model.toLowerCase().includes(searchTerm.toLowerCase())
-  );
-
-  const sortedVehicles = [...filteredVehicles].sort((a, b) => {
+  const sortedVehicles = [...vehicles].sort((a, b) => {
     if (!sortConfig) return 0;
     
     const aValue = a[sortConfig.key as keyof Vehicle];
@@ -74,27 +68,6 @@ export function VehicleTable({ vehicles }: VehicleTableProps) {
 
   return (
     <div className="space-y-4">
-      {/* Search Bar */}
-      <div className="relative">
-        <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 text-muted-foreground w-4 h-4" />
-        <input
-          type="text"
-          placeholder="Buscar por marca o modelo..."
-          value={searchTerm}
-          onChange={(e) => setSearchTerm(e.target.value)}
-          className="w-full pl-10 pr-10 h-10 bg-card border-border text-foreground rounded-none focus:ring-2 focus:ring-primary focus:ring-offset-2"
-        />
-        {searchTerm && (
-          <button
-            onClick={() => setSearchTerm('')}
-            className="absolute right-3 top-1/2 transform -translate-y-1/2 text-muted-foreground hover:text-foreground"
-            aria-label="Clear search"
-          >
-            <X className="w-4 h-4" />
-          </button>
-        )}
-      </div>
-
       {/* Table */}
       <div className="overflow-x-auto border border-border rounded-none shadow-sm">
         <table className="w-full">
