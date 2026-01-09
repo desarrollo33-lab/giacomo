@@ -126,22 +126,6 @@ export function VehicleTable({ vehicles }: VehicleTableProps) {
           </tbody>
         </table>
       </div>
-
-      {/* Edition Type Tag */}
-      {sortedVehicles.length > 0 && sortedVehicles.some(v => v.edition_type !== 'Official') && (
-        <div className="flex items-center gap-2 flex-wrap">
-          <span className="text-sm text-muted-foreground">Ediciones especiales:</span>
-          {Array.from(new Set(sortedVehicles.map(v => v.edition_type))).filter(type => type !== 'Official').map(type => (
-            <span
-              key={type}
-              className="px-3 py-1 text-xs font-semibold bg-card border-2 rounded-none"
-              style={{ borderColor: '#f7c01d', color: '#f7c01d' }}
-            >
-              {type}
-            </span>
-          ))}
-        </div>
-      )}
     </div>
   );
 }
