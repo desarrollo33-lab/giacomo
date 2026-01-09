@@ -14,6 +14,7 @@ interface Vehicle {
   edition_type: 'Official' | 'Special' | 'Limited';
   image_url: string;
   mileage_kms?: number;
+  profitability_percentage?: number;
 }
 
 interface DCRUniverseProps {
@@ -38,7 +39,8 @@ interface TabContent {
  * 
  * Features:
  * - Tabbed interface with 3 sections
- * - Collection and Sales tabs show VehicleTable
+ * - Collection tab shows VehicleTable with ROI
+ * - Sales tab shows VehicleTable with Price
  * - Storage tab shows promotional content
  * - Layout 35/65 (left title, right content)
  * - DCR Yellow accent color (#f7c01d)
@@ -188,9 +190,9 @@ const DCRUniverse: React.FC<DCRUniverseProps> = ({ vehicles }) => {
           {/* Right Column - Content (65% = 8 cols) */}
           <div className="lg:col-span-8">
             {activeTab === 'COLLECTION' ? (
-              <VehicleTable vehicles={vehicles} />
+              <VehicleTable vehicles={vehicles} showROI={true} />
             ) : activeTab === 'SALES' ? (
-              <VehicleTable vehicles={salesVehicles} />
+              <VehicleTable vehicles={salesVehicles} showROI={false} />
             ) : (
               <>
                 {/* Image + Badges + CTA (only for STORAGE) */}

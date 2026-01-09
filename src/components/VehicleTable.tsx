@@ -12,10 +12,12 @@ interface Vehicle {
   edition_type: 'Official' | 'Special' | 'Limited';
   image_url: string;
   mileage_kms?: number;
+  profitability_percentage?: number;
 }
 
 interface VehicleTableProps {
   vehicles: Vehicle[];
+  showROI?: boolean;
 }
 
 const brandColors: Record<string, string> = {
@@ -30,7 +32,7 @@ const brandColors: Record<string, string> = {
   'Chevrolet': '#ef4444'     // red
 };
 
-export function VehicleTable({ vehicles }: VehicleTableProps) {
+export function VehicleTable({ vehicles, showROI = false }: VehicleTableProps) {
   const [sortConfig, setSortConfig] = useState<{ key: string; direction: 'asc' | 'desc' } | null>(null);
 
   const sortedVehicles = [...vehicles].sort((a, b) => {
@@ -66,6 +68,15 @@ export function VehicleTable({ vehicles }: VehicleTableProps) {
     return new Intl.NumberFormat('es-CL').format(mileage) + ' km';
   };
 
+  const formatROI = (roi?: number) => {
+    if (roi === undefined || roi === null) return '-';
+    return `${roi > 0 ? '+' : ''}${roi}%`;
+  };
+
+  const columns = showROI 
+    ? ['Marca', 'Modelo', 'Año', 'KM', 'ROI'] 
+    : ['Marca', 'Modelo', 'Año', 'KM', 'Precio'];
+
   return (
     <div className="space-y-4">
       {/* Table */}
@@ -73,7 +84,7 @@ export function VehicleTable({ vehicles }: VehicleTableProps) {
         <table className="w-full">
           <thead className="bg-muted/30">
             <tr>
-              {['Marca', 'Modelo', 'Año', 'KM', 'Precio'].map((column) => (
+              {columns.map((column) => (
                 <th
                   key={column}
                   onClick={() => {
@@ -83,6 +94,8 @@ export function VehicleTable({ vehicles }: VehicleTableProps) {
                       handleSort('mileage_kms');
                     } else if (column === 'Precio') {
                       handleSort('current_price');
+                    } else if (column === 'ROI') {
+                      handleSort('profitability_percentage');
                     } else {
                       handleSort(column.toLowerCase());
                     }
@@ -119,9 +132,24 @@ export function VehicleTable({ vehicles }: VehicleTableProps) {
                   <td className="px-4 py-3 text-foreground tabular-nums">
                     {formatMileage(vehicle.mileage_kms)}
                   </td>
-                  <td className="px-4 py-3 font-semibold" style={{ color: '#f7c01d' }}>
-                    {formatPrice(vehicle.current_price)}
-                  </td>
+                  {showROI ? (
+                    <td className="px-4 py-3 font-semibold">
+                      <span
+                        className={vehicle.profitability_percentage && vehicle.profitability_percentage > 0 
+                          ? 'text-green-600' 
+                          : vehicle.profitability_percentage && vehicle.profitability_percentage < 0
+                          ? 'text-red-600'
+                          : 'text-muted-foreground'
+                        }
+                      >
+                        {formatROI(vehicle.profitability_percentage)}
+                      </span>
+                    </td>
+                  ) : (
+                    <td className="px-4 py-3 font-semibold" style={{ color: '#f7c01d' }}>
+                      {formatPrice(vehicle.current_price)}
+                    </td>
+                  )}
                 </tr>
               ))
             ) : (
