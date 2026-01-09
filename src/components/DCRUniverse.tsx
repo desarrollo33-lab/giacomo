@@ -13,6 +13,7 @@ interface Vehicle {
   status: 'Available' | 'Sold' | 'In Storage';
   edition_type: 'Official' | 'Special' | 'Limited';
   image_url: string;
+  profitability_percentage?: number;
 }
 
 interface DCRUniverseProps {
@@ -37,8 +38,8 @@ interface TabContent {
  * 
  * Features:
  * - Tabbed interface with 3 sections
- * - Collection tab shows VehicleTable with vehicles
- * - Sales/Storage tabs show promotional content
+ * - Collection and Sales tabs show VehicleTable
+ * - Storage tab shows promotional content
  * - Layout 35/65 (left title, right content)
  * - DCR Yellow accent color (#f7c01d)
  * - Flat design aesthetic (rounded-none)
@@ -72,6 +73,43 @@ const DCRUniverse: React.FC<DCRUniverseProps> = ({ vehicles }) => {
   };
 
   const activeContent = contentConfig[activeTab];
+
+  // Mock sales data for the Sales table
+  const salesVehicles: Vehicle[] = [
+    {
+      id: 's1',
+      brand: 'Porsche',
+      model: '911 GT3',
+      year: 2022,
+      current_price: 245000000,
+      status: 'Sold',
+      edition_type: 'Official',
+      image_url: '/porsche-gt3.jpg',
+      profitability_percentage: 12.5
+    },
+    {
+      id: 's2',
+      brand: 'Ferrari',
+      model: 'F8 Tributo',
+      year: 2021,
+      current_price: 380000000,
+      status: 'Sold',
+      edition_type: 'Special',
+      image_url: '/ferrari-f8.jpg',
+      profitability_percentage: 8.3
+    },
+    {
+      id: 's3',
+      brand: 'Lamborghini',
+      model: 'Huracán Evo',
+      year: 2022,
+      current_price: 295000000,
+      status: 'Sold',
+      edition_type: 'Official',
+      image_url: '/lambo-huracan.jpg',
+      profitability_percentage: 15.2
+    }
+  ];
 
   return (
     <section className="py-24 bg-background">
@@ -128,7 +166,7 @@ const DCRUniverse: React.FC<DCRUniverseProps> = ({ vehicles }) => {
                 <div className="pr-6">
                   <p className="text-sm text-muted-foreground leading-relaxed" style={{ color: '#798086' }}>
                     {activeTab === 'COLLECTION' && 'Vehículos disponibles para venta inmediata.'}
-                    {activeTab === 'SALES' && 'Vende tu vehículo con garantía y confianza.'}
+                    {activeTab === 'SALES' && 'Vehículos vendidos recientemente.'}
                     {activeTab === 'STORAGE' && 'Custodia profesional con seguridad máxima.'}
                   </p>
                 </div>
@@ -151,9 +189,11 @@ const DCRUniverse: React.FC<DCRUniverseProps> = ({ vehicles }) => {
           <div className="lg:col-span-8">
             {activeTab === 'COLLECTION' ? (
               <VehicleTable vehicles={vehicles} />
+            ) : activeTab === 'SALES' ? (
+              <VehicleTable vehicles={salesVehicles} />
             ) : (
               <>
-                {/* Image + Badges + CTA */}
+                {/* Image + Badges + CTA (only for STORAGE) */}
                 <div className="relative bg-secondary rounded-none overflow-hidden" style={{ backgroundColor: '#f1f2f4' }}>
                   {/* Large Emoji/Image */}
                   <div className="w-full h-96 flex items-center justify-center">
@@ -164,18 +204,16 @@ const DCRUniverse: React.FC<DCRUniverseProps> = ({ vehicles }) => {
                   <div className="absolute inset-0 bg-gradient-to-t from-background/80 to-transparent flex items-end p-8">
                     <div className="w-full">
                       <h2 className="text-5xl md:text-6xl font-bold text-foreground mb-4">
-                        {activeTab === 'SALES' && 'Proceso de Venta Transparente'}
-                        {activeTab === 'STORAGE' && 'Instalaciones de Alta Seguridad'}
+                        Instalaciones de Alta Seguridad
                       </h2>
                       <p className="text-muted-foreground mb-6" style={{ color: '#798086' }}>
-                        {activeTab === 'SALES' && 'Nuestro equipo de expertos te guía en cada paso del proceso de venta, garantizando transparencia y el mejor valor del mercado.'}
-                        {activeTab === 'STORAGE' && 'Nuestras instalaciones cuentan con seguridad 24/7, sistemas de climatización y mantenimiento preventivo continuo.'}
+                        Nuestras instalaciones cuentan con seguridad 24/7, sistemas de climatización y mantenimiento preventivo continuo.
                       </p>
                       <Button
                         className="rounded-none font-semibold"
                         style={{ backgroundColor: '#f7c01d', color: '#181f25' }}
                       >
-                        {activeTab === 'SALES' ? 'Vender Mi Vehículo' : 'Más Información'}
+                        Más Información
                         <ArrowRight className="w-4 h-4 ml-2" />
                       </Button>
                     </div>
