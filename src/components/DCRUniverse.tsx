@@ -118,7 +118,7 @@ const DCRUniverse: React.FC<DCRUniverseProps> = ({ vehicles }) => {
             <div className="text-right">
               <h3 className="text-6xl font-bold text-foreground mb-6 leading-tight">
                 {activeContent.title.split(' ').map((word, i) => (
-                  <div key={i}>{word}</div>
+                  <h3 key={i}>{word}</h3>
                 ))}
               </h3>
               
