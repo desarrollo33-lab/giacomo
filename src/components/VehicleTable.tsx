@@ -11,6 +11,7 @@ interface Vehicle {
   status: 'Available' | 'Sold' | 'In Storage';
   edition_type: 'Official' | 'Special' | 'Limited';
   image_url: string;
+  profitability_percentage?: number;
 }
 
 interface VehicleTableProps {
@@ -57,13 +58,9 @@ export function VehicleTable({ vehicles }: VehicleTableProps) {
     setSortConfig({ key, direction });
   };
 
-  const formatPrice = (price: number) => {
-    return new Intl.NumberFormat('es-CL', {
-      style: 'currency',
-      currency: 'CLP',
-      minimumFractionDigits: 0,
-      maximumFractionDigits: 0
-    }).format(price);
+  const formatROI = (roi?: number) => {
+    if (roi === undefined || roi === null) return '-';
+    return `${roi > 0 ? '+' : ''}${roi}%`;
   };
 
   return (
@@ -73,10 +70,16 @@ export function VehicleTable({ vehicles }: VehicleTableProps) {
         <table className="w-full">
           <thead className="bg-muted/30">
             <tr>
-              {['Marca', 'Modelo', 'Año', 'Precio', 'Estado'].map((column) => (
+              {['Marca', 'Modelo', 'ROI', 'Estado'].map((column) => (
                 <th
                   key={column}
-                  onClick={() => handleSort(column.toLowerCase() === 'año' ? 'year' : column.toLowerCase())}
+                  onClick={() => {
+                    if (column === 'ROI') {
+                      handleSort('profitability_percentage');
+                    } else {
+                      handleSort(column.toLowerCase());
+                    }
+                  }}
                   className="px-4 py-4 text-left text-sm font-semibold text-foreground cursor-pointer hover:bg-muted/50 transition-colors"
                 >
                   <div className="flex items-center gap-2">
@@ -105,9 +108,17 @@ export function VehicleTable({ vehicles }: VehicleTableProps) {
                     </span>
                   </td>
                   <td className="px-4 py-3 text-foreground font-medium">{vehicle.model}</td>
-                  <td className="px-4 py-3 text-foreground tabular-nums">{vehicle.year}</td>
-                  <td className="px-4 py-3 font-semibold" style={{ color: '#f7c01d' }}>
-                    {formatPrice(vehicle.current_price)}
+                  <td className="px-4 py-3 font-semibold">
+                    <span
+                      className={vehicle.profitability_percentage && vehicle.profitability_percentage > 0 
+                        ? 'text-green-600' 
+                        : vehicle.profitability_percentage && vehicle.profitability_percentage < 0
+                        ? 'text-red-600'
+                        : 'text-muted-foreground'
+                      }
+                    >
+                      {formatROI(vehicle.profitability_percentage)}
+                    </span>
                   </td>
                   <td className="px-4 py-3">
                     <span className={`px-3 py-1 text-xs font-medium border rounded-none whitespace-nowrap ${statusColors[vehicle.status]}`}>
@@ -118,7 +129,7 @@ export function VehicleTable({ vehicles }: VehicleTableProps) {
               ))
             ) : (
               <tr>
-                <td colSpan={5} className="px-4 py-12 text-center text-muted-foreground">
+                <td colSpan={4} className="px-4 py-12 text-center text-muted-foreground">
                   No se encontraron vehículos
                 </td>
               </tr>
