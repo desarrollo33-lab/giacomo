@@ -11,7 +11,6 @@ interface Vehicle {
   status: 'Available' | 'Sold' | 'In Storage';
   edition_type: 'Official' | 'Special' | 'Limited';
   image_url: string;
-  profitability_percentage?: number;
 }
 
 interface VehicleTableProps {
@@ -52,9 +51,13 @@ export function VehicleTable({ vehicles }: VehicleTableProps) {
     setSortConfig({ key, direction });
   };
 
-  const formatROI = (roi?: number) => {
-    if (roi === undefined || roi === null) return '-';
-    return `${roi > 0 ? '+' : ''}${roi}%`;
+  const formatPrice = (price: number) => {
+    return new Intl.NumberFormat('es-CL', {
+      style: 'currency',
+      currency: 'CLP',
+      minimumFractionDigits: 0,
+      maximumFractionDigits: 0
+    }).format(price);
   };
 
   return (
@@ -64,14 +67,14 @@ export function VehicleTable({ vehicles }: VehicleTableProps) {
         <table className="w-full">
           <thead className="bg-muted/30">
             <tr>
-              {['Marca', 'Modelo', 'Año', 'ROI'].map((column) => (
+              {['Marca', 'Modelo', 'Año', 'Precio'].map((column) => (
                 <th
                   key={column}
                   onClick={() => {
-                    if (column === 'ROI') {
-                      handleSort('profitability_percentage');
-                    } else if (column === 'Año') {
+                    if (column === 'Año') {
                       handleSort('year');
+                    } else if (column === 'Precio') {
+                      handleSort('current_price');
                     } else {
                       handleSort(column.toLowerCase());
                     }
@@ -105,17 +108,8 @@ export function VehicleTable({ vehicles }: VehicleTableProps) {
                   </td>
                   <td className="px-4 py-3 text-foreground font-medium">{vehicle.model}</td>
                   <td className="px-4 py-3 text-foreground tabular-nums">{vehicle.year}</td>
-                  <td className="px-4 py-3 font-semibold">
-                    <span
-                      className={vehicle.profitability_percentage && vehicle.profitability_percentage > 0 
-                        ? 'text-green-600' 
-                        : vehicle.profitability_percentage && vehicle.profitability_percentage < 0
-                        ? 'text-red-600'
-                        : 'text-muted-foreground'
-                      }
-                    >
-                      {formatROI(vehicle.profitability_percentage)}
-                    </span>
+                  <td className="px-4 py-3 font-semibold" style={{ color: '#f7c01d' }}>
+                    {formatPrice(vehicle.current_price)}
                   </td>
                 </tr>
               ))
