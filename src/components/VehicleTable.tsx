@@ -11,6 +11,7 @@ interface Vehicle {
   status: 'Available' | 'Sold' | 'In Storage';
   edition_type: 'Official' | 'Special' | 'Limited';
   image_url: string;
+  mileage_kms?: number;
 }
 
 interface VehicleTableProps {
@@ -60,6 +61,11 @@ export function VehicleTable({ vehicles }: VehicleTableProps) {
     }).format(price);
   };
 
+  const formatMileage = (mileage?: number) => {
+    if (mileage === undefined || mileage === null) return '-';
+    return new Intl.NumberFormat('es-CL').format(mileage) + ' km';
+  };
+
   return (
     <div className="space-y-4">
       {/* Table */}
@@ -67,12 +73,14 @@ export function VehicleTable({ vehicles }: VehicleTableProps) {
         <table className="w-full">
           <thead className="bg-muted/30">
             <tr>
-              {['Marca', 'Modelo', 'Año', 'Precio'].map((column) => (
+              {['Marca', 'Modelo', 'Año', 'KM', 'Precio'].map((column) => (
                 <th
                   key={column}
                   onClick={() => {
                     if (column === 'Año') {
                       handleSort('year');
+                    } else if (column === 'KM') {
+                      handleSort('mileage_kms');
                     } else if (column === 'Precio') {
                       handleSort('current_price');
                     } else {
@@ -108,6 +116,9 @@ export function VehicleTable({ vehicles }: VehicleTableProps) {
                   </td>
                   <td className="px-4 py-3 text-foreground font-medium">{vehicle.model}</td>
                   <td className="px-4 py-3 text-foreground tabular-nums">{vehicle.year}</td>
+                  <td className="px-4 py-3 text-foreground tabular-nums">
+                    {formatMileage(vehicle.mileage_kms)}
+                  </td>
                   <td className="px-4 py-3 font-semibold" style={{ color: '#f7c01d' }}>
                     {formatPrice(vehicle.current_price)}
                   </td>
@@ -115,7 +126,7 @@ export function VehicleTable({ vehicles }: VehicleTableProps) {
               ))
             ) : (
               <tr>
-                <td colSpan={4} className="px-4 py-12 text-center text-muted-foreground">
+                <td colSpan={5} className="px-4 py-12 text-center text-muted-foreground">
                   No se encontraron vehículos
                 </td>
               </tr>

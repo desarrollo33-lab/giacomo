@@ -13,7 +13,7 @@ interface Vehicle {
   status: 'Available' | 'Sold' | 'In Storage';
   edition_type: 'Official' | 'Special' | 'Limited';
   image_url: string;
-  profitability_percentage?: number;
+  mileage_kms?: number;
 }
 
 interface DCRUniverseProps {
@@ -85,7 +85,7 @@ const DCRUniverse: React.FC<DCRUniverseProps> = ({ vehicles }) => {
       status: 'Sold',
       edition_type: 'Official',
       image_url: '/porsche-gt3.jpg',
-      profitability_percentage: 12.5
+      mileage_kms: 8500
     },
     {
       id: 's2',
@@ -96,7 +96,7 @@ const DCRUniverse: React.FC<DCRUniverseProps> = ({ vehicles }) => {
       status: 'Sold',
       edition_type: 'Special',
       image_url: '/ferrari-f8.jpg',
-      profitability_percentage: 8.3
+      mileage_kms: 3200
     },
     {
       id: 's3',
@@ -107,7 +107,7 @@ const DCRUniverse: React.FC<DCRUniverseProps> = ({ vehicles }) => {
       status: 'Sold',
       edition_type: 'Official',
       image_url: '/lambo-huracan.jpg',
-      profitability_percentage: 15.2
+      mileage_kms: 5800
     }
   ];
 
