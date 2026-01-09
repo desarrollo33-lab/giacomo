@@ -68,7 +68,7 @@ export function StickerPacks() {
   const selected = packages.find(pkg => pkg.id === selectedPackage);
 
   return (
-    <section className="py-24" style={{ backgroundColor: '#f1f2f4' }}>
+    <section className="py-24" style={{ backgroundColor: '#181f25' }}>
       <div className="container mx-auto px-4">
         {/* Header */}
         <div className="text-center mb-16">
