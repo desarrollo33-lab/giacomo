@@ -1,0 +1,68 @@
+﻿an className="font-bold text-[30vw] text-slate-400 dark:text-slate-600 tracking-tighter">
+          DCR
+        </span>
+      </div>
+
+      <main className="relative z-10 max-w-7xl mx-auto px-6 lg:px-8">
+        <div className="grid grid-cols-1 lg:grid-cols-12 gap-8 lg:gap-16">
+          
+          {/* Left Column - 5/12 (41.67%) */}
+          <div className="lg:col-span-5 flex flex-col space-y-8 lg:space-y-12">
+            {/* Header */}
+            <div>
+              <p className="text-[10px] md:text-xs font-bold tracking-[0.2em] uppercase text-slate-500 mb-2">
+                DCR Ecosystem
+              </p>
+              <div className="flex flex-wrap items-center font-bold text-5xl lg:text-6xl tracking-tight">
+                <span className="text-slate-900 mr-1">DCR</span>
+                <span className="bg-[#f7c01d] text-white px-2 py-1 leading-none transform -skew-x-6">
+                  UNIVERSE
+                </span>
+              </div>
+            </div>
+
+            {/* Tab Navigation - Horizontal, Top Right of Left Column */}
+            <nav className="border-b border-slate-200 dark:border-slate-700">
+              <ul className="flex space-x-6 lg:space-x-8 overflow-x-auto">
+                {tabs.map((tab) => {
+                  const isActive = activeTab === tab;
+                  return (
+                    <li key={tab} className="pb-3 flex-shrink-0">
+                      <button
+                        onClick={() => setActiveTab(tab)}
+                        className={`text-[10px] md:text-sm font-bold tracking-widest uppercase transition-colors ${
+                          isActive 
+                            ? 'text-slate-900 dark:text-white border-b-2 border-slate-900 dark:border-white'
+                            : 'text-slate-400 dark:text-slate-500 hover:text-slate-600 dark:hover:text-slate-300 border-b-2 border-transparent hover:border-slate-300 dark:hover:border-slate-600'
+                        }`}
+                      >
+                        {tab === 'COLLECTION' && '// '}
+                        {tab}
+                      </button>
+                    </li>
+                  );
+                })}
+              </ul>
+            </nav>
+
+            {/* Dynamic Content Based on Active Tab */}
+            <div className="space-y-6 lg:space-y-8">
+              <h1 className="font-bold text-4xl lg:text-5xl uppercase leading-[0.9]">
+                {activeTab === 'COLLECTION' && (
+                  <>
+                    Premium<br/>Collection
+                  </>
+                )}
+                {activeTab === 'SALES' && (
+                  <>
+                    Exclusive<br/>Sales
+                  </>
+                )}
+                {activeTab === 'STORAGE' && (
+                  <>
+                    Technical<br/>Storage
+                  </>
+                )}
+              </h1>
+
+              <div className="border-l-4 border-[#
