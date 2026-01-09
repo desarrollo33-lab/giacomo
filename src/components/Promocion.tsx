@@ -83,7 +83,7 @@ const brandColors: Record<string, string> = {
 
 export function Promocion() {
   return (
-    <section className="py-24" style={{ backgroundColor: '#181f25' }}>
+    <section className="py-24" style={{ backgroundColor: '#ffffff' }}>
       <div className="container mx-auto px-4">
         {/* Header */}
         <div className="text-center mb-16">

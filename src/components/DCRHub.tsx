@@ -290,7 +290,7 @@ export function DCRHub() {
   };
 
   return (
-    <section style={{ backgroundColor: '#ffffff', padding: '96px 24px' }}>
+    <section style={{ backgroundColor: '#181f25', padding: '96px 24px' }}>
       <div className="max-w-7xl mx-auto">
         <div className="flex gap-8">
           {/* Sidebar Filters */}
