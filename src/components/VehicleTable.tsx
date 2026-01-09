@@ -30,12 +30,6 @@ const brandColors: Record<string, string> = {
   'Chevrolet': '#ef4444'     // red
 };
 
-const statusColors: Record<string, string> = {
-  'Available': 'bg-green-500/20 text-green-700 border-green-500/30',
-  'Sold': 'bg-red-500/20 text-red-700 border-red-500/30',
-  'In Storage': 'bg-blue-500/20 text-blue-700 border-blue-500/30'
-};
-
 export function VehicleTable({ vehicles }: VehicleTableProps) {
   const [sortConfig, setSortConfig] = useState<{ key: string; direction: 'asc' | 'desc' } | null>(null);
 
@@ -70,12 +64,14 @@ export function VehicleTable({ vehicles }: VehicleTableProps) {
         <table className="w-full">
           <thead className="bg-muted/30">
             <tr>
-              {['Marca', 'Modelo', 'ROI', 'Estado'].map((column) => (
+              {['Marca', 'Modelo', 'Año', 'ROI'].map((column) => (
                 <th
                   key={column}
                   onClick={() => {
                     if (column === 'ROI') {
                       handleSort('profitability_percentage');
+                    } else if (column === 'Año') {
+                      handleSort('year');
                     } else {
                       handleSort(column.toLowerCase());
                     }
@@ -108,6 +104,7 @@ export function VehicleTable({ vehicles }: VehicleTableProps) {
                     </span>
                   </td>
                   <td className="px-4 py-3 text-foreground font-medium">{vehicle.model}</td>
+                  <td className="px-4 py-3 text-foreground tabular-nums">{vehicle.year}</td>
                   <td className="px-4 py-3 font-semibold">
                     <span
                       className={vehicle.profitability_percentage && vehicle.profitability_percentage > 0 
@@ -118,11 +115,6 @@ export function VehicleTable({ vehicles }: VehicleTableProps) {
                       }
                     >
                       {formatROI(vehicle.profitability_percentage)}
-                    </span>
-                  </td>
-                  <td className="px-4 py-3">
-                    <span className={`px-3 py-1 text-xs font-medium border rounded-none whitespace-nowrap ${statusColors[vehicle.status]}`}>
-                      {vehicle.status}
                     </span>
                   </td>
                 </tr>
